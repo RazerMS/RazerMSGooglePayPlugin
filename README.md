@@ -2,7 +2,8 @@
  # license: Copyright © 2011-2022 Razer Merchant Services Sdn Bhd. All Rights Reserved. 
  -->
  
- ![banner RMSxApple pay]()
+![banner RMSxGooglePay](https://user-images.githubusercontent.com/17770615/199203191-891462c9-05b3-4ad5-b2a9-eaa67d873698.png)
+
 
 # [Mobile Plugin] - RazerMS Google Pay Plugin
 
