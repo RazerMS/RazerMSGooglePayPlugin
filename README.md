@@ -60,7 +60,7 @@ Maven primarily aids in the download of dependencies, which are libraries or JAR
 
         dependencies {
             ...
-            implementation 'com.github.massodasuki:testlibray:v1.0.4' <-- TODO
+            implementation 'com.github' <-- TODO
             implementation 'com.google.android.gms:play-services-wallet:19.1.0'
             ...
 
@@ -88,7 +88,7 @@ Maven primarily aids in the download of dependencies, which are libraries or JAR
         paymentInputObj.put("isSandbox", "false");
 
     
-## Start Razer GooglePay payment module & callback response
+## Start Razer GooglePay payment module using AsyncTask
 
         private void handlePaymentSuccess(@Nullable PaymentData paymentData) {
             final String paymentInfo = paymentData.toJson();
@@ -227,7 +227,7 @@ Maven primarily aids in the download of dependencies, which are libraries or JAR
             }
         }
 
-## Handling the response
+## Handling the response callback
 
     public class CheckoutActivity extends AppCompatActivity {
         ...
