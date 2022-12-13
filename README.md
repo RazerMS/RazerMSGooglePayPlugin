@@ -77,15 +77,15 @@ Maven primarily aids in the download of dependencies, which are libraries or JAR
         paymentInputObj.put("currency", "MYR");
 
         // Optional, but required payment values. User input will be required when values not passed.
-        paymentInputObj.put("billName", "Abd Qayyum");
-        paymentInputObj.put("billEmail", "qayyum.ishak@razer.com");
-        paymentInputObj.put("billPhone", "60133833895");
+        paymentInputObj.put("billName", "Masso Dasuki");
+        paymentInputObj.put("billEmail", "masso@gmail.com");
+        paymentInputObj.put("billPhone", "601234567890");
         paymentInputObj.put("billDesc", "Google Pay Testing");
 
 
         // Mandatory String, Merchant Config
-        paymentInputObj.put("merchantId", "rmsxdk_mobile_Dev");
-        paymentInputObj.put("verificationKey", "ee738b541eff7b6b495e44771f71c0ec");
+        paymentInputObj.put("merchantId", "merchant_Dev");
+        paymentInputObj.put("verificationKey", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
         paymentInputObj.put("isSandbox", "false");
 
     
@@ -101,12 +101,12 @@ Maven primarily aids in the download of dependencies, which are libraries or JAR
                 paymentInputObj.put("orderId", "order111");
                 paymentInputObj.put("amount", "1.10");
                 paymentInputObj.put("currency", "MYR");
-                paymentInputObj.put("billName", "Abd Qayyum");
-                paymentInputObj.put("billEmail", "qayyum.ishak@razer.com");
-                paymentInputObj.put("billPhone", "60133833895");
+                paymentInputObj.put("billName", "Masso Dasuki");
+                paymentInputObj.put("billEmail", "masso@gmail.com");
+                paymentInputObj.put("billPhone", "601234567890");
                 paymentInputObj.put("billDesc", "Google Pay Testing");
-                paymentInputObj.put("merchantId", "rmsxdk_mobile_Dev");
-                paymentInputObj.put("verificationKey", "ee738b541eff7b6b495e44771f71c0ec");
+                paymentInputObj.put("merchantId", "merchant_Dev");
+                paymentInputObj.put("verificationKey", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
                 paymentInputObj.put("isSandbox", "false");
 
                 String paymentInput = paymentInputObj.toString();
@@ -173,12 +173,12 @@ Maven primarily aids in the download of dependencies, which are libraries or JAR
                 paymentInputObj.put("orderId", "order111");
                 paymentInputObj.put("amount", "1.10");
                 paymentInputObj.put("currency", "MYR");
-                paymentInputObj.put("billName", "Abd Qayyum");
-                paymentInputObj.put("billEmail", "qayyum.ishak@razer.com");
-                paymentInputObj.put("billPhone", "60133833895");
+                paymentInputObj.put("billName", "Masso Dasuki");
+                paymentInputObj.put("billEmail", "masso@gmail.com");
+                paymentInputObj.put("billPhone", "01234567890");
                 paymentInputObj.put("billDesc", "Google Pay Testing");
-                paymentInputObj.put("merchantId", "rmsxdk_mobile_Dev");
-                paymentInputObj.put("verificationKey", "ee738b541eff7b6b495e44771f71c0ec");
+                paymentInputObj.put("merchantId", "merchant_Dev");
+                paymentInputObj.put("verificationKey", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
                 paymentInputObj.put("isSandbox", "false");
 
                 String paymentInput = paymentInputObj.toString();
@@ -265,10 +265,10 @@ Maven primarily aids in the download of dependencies, which are libraries or JAR
         appcode = 179367;
         channel = CREDIT;
         currency = MYR;
-        domain = "rmsxdk_mobile_Dev";
+        domain = "merchant_Dev";
         orderid = order54;
         paydate = "2022-09-22 17:49:08";
-        skey = 54f0a059227b1609a788cd988dd2845d;
+        skey = 54XXXXXXXXXXXXXXXXXXXXXXXXXXd;
         status = 00;
         tranID = 1278569348;
         xdkHTMLRedirection = "xxxxxxxxxx";
