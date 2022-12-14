@@ -23,7 +23,7 @@ This is the complete and functional Razer Merchant Services Google Pay Plugin pa
 
 Maven primarily aids in the download of dependencies, which are libraries or JAR files, for Java-based applications. For usage and installation instructions, visit their website. To integrate RazerMS Google Pay Plugin into your Android Studio project using CocoaPods, specify it in your file:
 
-    In file settings.gradle
+In file settings.gradle
 
         pluginManagement {
             repositories {
@@ -42,7 +42,8 @@ Maven primarily aids in the download of dependencies, which are libraries or JAR
         rootProject.name = "Application Name"
         include ':app'
 
-     In file build.gradle under app folder
+
+In file build.gradle under app folder
 
         plugins {
             id 'com.android.application'
@@ -61,7 +62,7 @@ Maven primarily aids in the download of dependencies, which are libraries or JAR
 
         dependencies {
             ...
-            implementation 'com.github' <-- TODO
+            implementation 'com.github.RazerMS:RazerMSGooglePayPlugin:1.0.0'
             implementation 'com.google.android.gms:play-services-wallet:19.1.0'
             ...
 
