@@ -11,6 +11,7 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
@@ -162,6 +163,7 @@ public class ApiRequestService {
             Log.d(TAG, String.format("code: %s - %s", httpURLConnection.getResponseCode(), httpURLConnection.getResponseMessage()));
             response.put("statusCode", httpURLConnection.getResponseCode());
             response.put("responseMessage", httpURLConnection.getResponseMessage());
+            response.put("responseBody", getResponseBody(httpURLConnection));
             return response;
         } catch (Exception e) {
             e.printStackTrace();
@@ -169,4 +171,22 @@ public class ApiRequestService {
             return new JSONObject(String.format("{\"exception\":\"%s\"}", e.getMessage()));
         }
     }
+
+    public static String getResponseBody(HttpURLConnection conn) {
+        BufferedReader br = null;
+        StringBuilder body = null;
+        String line = "";
+        try {
+            br = new BufferedReader(new InputStreamReader(
+                    conn.getInputStream()));
+            body = new StringBuilder();
+            while ((line = br.readLine()) != null)
+                body.append(line);
+            return body.toString();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    
 }
