@@ -108,6 +108,14 @@ public class WebActivity extends AppCompatActivity {
                     thread.join();
                     queryResultStr[0] = queryResultThread.getValue();
 
+                    // If success
+                    if (!queryResultStr[0].contains("Error")) {
+                        // do something
+                        Intent intent = new Intent();
+                        intent.putExtra("response", String.valueOf(queryResultStr[0]));
+                        setResult(RESULT_OK, intent);
+                    }
+
                     Log.d(TAG, String.format("onTick QueryResultThread thread.join()"));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
