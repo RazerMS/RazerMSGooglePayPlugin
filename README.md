@@ -72,13 +72,13 @@ In file build.gradle under app folder
 
 In file PaymentUtils.java
 
-   private static JSONObject getMerchantInfo() throws JSONException {
-           JSONObject merchantInfo = new JSONObject();
-           merchantInfo.put("merchantId", "BCRXXXXXXXXXXXX5");
-           merchantInfo.put("merchantName", "Google Bussiness Name");
-           merchantInfo.put("merchantOrigin", "origin");
-           return merchantInfo;
-       }
+        private static JSONObject getMerchantInfo() throws JSONException {
+                JSONObject merchantInfo = new JSONObject();
+                merchantInfo.put("merchantId", "BCRXXXXXXXXXXXX5");
+                merchantInfo.put("merchantName", "Google Bussiness Name");
+                merchantInfo.put("merchantOrigin", "origin");
+                return merchantInfo;
+            }
        
 ## Prepare Payment Gateway Tokenainzation Name
 
