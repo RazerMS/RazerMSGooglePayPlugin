@@ -67,6 +67,39 @@ In file build.gradle under app folder
             ...
 
         }
+        
+## Prepare Merchant Info
+
+In file PaymentUtils.java
+
+   private static JSONObject getMerchantInfo() throws JSONException {
+           JSONObject merchantInfo = new JSONObject();
+           merchantInfo.put("merchantId", "BCRXXXXXXXXXXXX5");
+           merchantInfo.put("merchantName", "Google Bussiness Name");
+           merchantInfo.put("merchantOrigin", "origin");
+           return merchantInfo;
+       }
+       
+## Prepare Payment Gateway Tokenainzation Name
+
+In file Constants.java
+
+       public static final String PAYMENT_GATEWAY_TOKENIZATION_NAME = "molpay";
+
+       /**
+        * Custom parameters required by the processor/gateway.
+        * In many cases, your processor / gateway will only require a gatewayMerchantId.
+        * Please refer to your processor's documentation for more information. The number of parameters
+        * required and their names vary depending on the processor.
+        *
+        * @value #PAYMENT_GATEWAY_TOKENIZATION_PARAMETERS
+        */
+       public static final HashMap<String, String> PAYMENT_GATEWAY_TOKENIZATION_PARAMETERS =
+               new HashMap<String, String>() {{
+                   put("gateway", PAYMENT_GATEWAY_TOKENIZATION_NAME);
+                   put("gatewayMerchantId", "molpay");
+                   // Your processor may require additional parameters.
+               }};
 
 ## Prepare the Payment detail object
 
