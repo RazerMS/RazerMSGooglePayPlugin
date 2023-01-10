@@ -62,7 +62,7 @@ In file build.gradle under app folder
 
         dependencies {
             ...
-            implementation 'com.github.RazerMS:RazerMSGooglePayPlugin:1.0.0'
+            implementation 'com.github.RazerMS:RazerMSGooglePayPlugin:1.0.2'
             implementation 'com.google.android.gms:play-services-wallet:19.1.0'
             ...
 
@@ -70,190 +70,184 @@ In file build.gradle under app folder
 
 ## Prepare the Payment detail object
 
-        JSONObject paymentInputObj = new JSONObject();
+        public JSONObject paymentInput = new JSONObject();
 
         // Mandatory String. Payment values.
-        paymentInputObj.put("orderId", "order111");
-        paymentInputObj.put("amount", "1.10");
-        paymentInputObj.put("currency", "MYR");
+        paymentInput.put("orderId", "order111");
+        paymentInput.put("amount", "1.10");
+        paymentInput.put("currency", "MYR");
 
         // Optional, but required payment values. User input will be required when values not passed.
-        paymentInputObj.put("billName", "Masso Dasuki");
-        paymentInputObj.put("billEmail", "masso@gmail.com");
-        paymentInputObj.put("billPhone", "601234567890");
-        paymentInputObj.put("billDesc", "Google Pay Testing");
+        paymentInput.put("billName", "Masso Dasuki");
+        paymentInput.put("billEmail", "masso@gmail.com");
+        paymentInput.put("billPhone", "601234567890");
+        paymentInput.put("billDesc", "Google Pay Testing");
 
 
         // Mandatory String, Merchant Config
-        paymentInputObj.put("merchantId", "merchant_Dev");
-        paymentInputObj.put("verificationKey", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-        paymentInputObj.put("isSandbox", "false");
+        paymentInput.put("merchantId", "merchant_Dev");
+        paymentInput.put("verificationKey", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+        paymentInput.put("isSandbox", "false");
 
     
 ## Start Razer GooglePay payment module using AsyncTask
 
-        private void handlePaymentSuccess(@Nullable PaymentData paymentData) {
-            final String paymentInfo = paymentData.toJson();
+        
+        public class CheckoutActivity extends AppCompatActivity {
+
+        // Arbitrarily-picked constant integer you define to track a request for payment data activity.
+        private static final int LOAD_TRANSACTION_DATA_REQUEST_CODE = 998;
+        ...
+        ...
+        public JSONObject paymentInput = new JSONObject();
+        
+        public void requestPayment(View view) {
+
+            // Disables the button to prevent multiple clicks.
+            googlePayButton.setClickable(false);
+
+            // The price provided to the API should include taxes and shipping.
+            // This price is not displayed to the user.
+            long priceCents = Long.parseLong(editAmount.getText().toString().replace(".", ""));
+            long shippingCostCents = 10;
+            long totalPriceCents = priceCents + shippingCostCents;
 
             try {
 
-                JSONObject paymentInputObj = new JSONObject();
-
-                paymentInputObj.put("orderId", "order111");
-                paymentInputObj.put("amount", "1.10");
-                paymentInputObj.put("currency", "MYR");
-                paymentInputObj.put("billName", "Masso Dasuki");
-                paymentInputObj.put("billEmail", "masso@gmail.com");
-                paymentInputObj.put("billPhone", "601234567890");
-                paymentInputObj.put("billDesc", "Google Pay Testing");
-                paymentInputObj.put("merchantId", "merchant_Dev");
-                paymentInputObj.put("verificationKey", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-                paymentInputObj.put("isSandbox", "false");
-
-                String paymentInput = paymentInputObj.toString();
-
-                // Execute the payment using PaymentTaskRunner (AsyncTask Process)
-                PaymentTaskRunner runner = new PaymentTaskRunner();
-                runner.execute(paymentInput, paymentInfo);
+              paymentInput.put("orderId", "order111");
+              paymentInput.put("amount", "1.10");
+              paymentInput.put("currency", "MYR");
+              paymentInput.put("billName", "Masso Dasuki");
+              paymentInput.put("billEmail", "masso@gmail.com");
+              paymentInput.put("billPhone", "601234567890");
+              paymentInput.put("billDesc", "Google Pay Testing");
+              paymentInput.put("merchantId", "merchant_Dev");
+              paymentInput.put("verificationKey", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+              paymentInput.put("isSandbox", "false");
 
             } catch (JSONException e) {
-                throw new RuntimeException("The selected garment cannot be parsed from the list of elements");
+                e.printStackTrace();
             }
-        }
+
+            final Task<PaymentData> task = model.getLoadPaymentDataTask(totalPriceCents);
+
+            // Shows the payment sheet and forwards the result to the onActivityResult method.
+            AutoResolveHelper.resolveTask(task, this, LOAD_PAYMENT_DATA_REQUEST_CODE);
+         }
+    }
 
 
-## Create PaymentTaskRunner extend by AsyncTask
+## Create Redirection After Google Pay Successfully Handling Payment
 
-        private class PaymentTaskRunner extends AsyncTask<String, String, String> {
+        @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        JSONObject paymentInputObj = paymentInput;
 
-            private String resp;
-            @Override
-            protected String doInBackground(String... params) {
-                try {
-                    RMSGooglePay pay = new RMSGooglePay();
-                    Object result = pay.requestPayment(
-                            params[0],
-                            params[1]
-                    );
+        Context context = getApplicationContext();
+        CharSequence response = null;
+        int duration = Toast.LENGTH_SHORT;
 
-                    resp = result.toString();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    resp = e.getMessage();
+        Log.d(TAG, String.valueOf(requestCode));
+        switch (requestCode) {
+            // value passed in AutoResolveHelper
+            case LOAD_PAYMENT_DATA_REQUEST_CODE:
+                switch (resultCode) {
+
+                    case AppCompatActivity.RESULT_OK:
+                        PaymentData paymentData = PaymentData.getFromIntent(data);
+                        
+                        String paymentInfo = handlePaymentSuccess(paymentData);
+                        String paymentInput = paymentInputObj.toString();
+                        
+                        Intent i = new Intent(CheckoutActivity.this, WebActivity.class); // Redirect To WebActivity (this library)
+                        i.putExtra("paymentInput", paymentInput);
+                        i.putExtra("paymentInfo", paymentInfo);
+                        startActivityForResult(i, LOAD_TRANSACTION_DATA_REQUEST_CODE);
+                        break;
+
+                    case AppCompatActivity.RESULT_CANCELED:
+                        // The user cancelled the payment attempt
+                        break;
+
+                    case AutoResolveHelper.RESULT_ERROR:
+                        Status status = AutoResolveHelper.getStatusFromIntent(data);
+                        handleError(status);
+                        break;
+
                 }
-                return resp;
-            }
+                break;
 
-            @Override
-            protected void onPostExecute(String result) {
-                Log.i("PaymentTaskRunner onPostExecute", "Done");
-                processValue(result);
-            }
-
-            @Override
-            protected void onPreExecute() {
-                Log.i("PaymentTaskRunner onPreExecute", "preExecute");
-            }
-
-            @Override
-            protected void onProgressUpdate(String... text) {
-                Log.e("PaymentTaskRunner onProgressUpdate", "progressUpdate");
-            }
-        }
-
-
-## Full Code
-
-        private void handlePaymentSuccess(@Nullable PaymentData paymentData) {
-            final String paymentInfo = paymentData.toJson();
-
-            try {
-
-                JSONObject paymentInputObj = new JSONObject();
-
-                paymentInputObj.put("orderId", "order111");
-                paymentInputObj.put("amount", "1.10");
-                paymentInputObj.put("currency", "MYR");
-                paymentInputObj.put("billName", "Masso Dasuki");
-                paymentInputObj.put("billEmail", "masso@gmail.com");
-                paymentInputObj.put("billPhone", "01234567890");
-                paymentInputObj.put("billDesc", "Google Pay Testing");
-                paymentInputObj.put("merchantId", "merchant_Dev");
-                paymentInputObj.put("verificationKey", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-                paymentInputObj.put("isSandbox", "false");
-
-                String paymentInput = paymentInputObj.toString();
-
-                PaymentTaskRunner runner = new PaymentTaskRunner();
-                runner.execute(paymentInput, paymentInfo);
-
-            } catch (JSONException e) {
-                throw new RuntimeException("The selected garment cannot be parsed from the list of elements");
-            }
-        }
-
-        private class PaymentTaskRunner extends AsyncTask<String, String, String> {
-
-            private String resp;
-            @Override
-            protected String doInBackground(String... params) {
-                try {
-                    RMSGooglePay pay = new RMSGooglePay();
-                    Object result = pay.requestPayment(
-                            params[0],
-                            params[1]
-                    );
-
-                    resp = result.toString();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    resp = e.getMessage();
+            case LOAD_TRANSACTION_DATA_REQUEST_CODE:
+                switch (resultCode) {
+                    ...
+                    ...
                 }
-                return resp;
-            }
 
-            @Override
-            protected void onPostExecute(String result) {
-                Log.i("PaymentTaskRunner onPostExecute", "Done");
-                processValue(result);
-            }
-
-            @Override
-            protected void onPreExecute() {
-                Log.i("PaymentTaskRunner onPreExecute", "preExecute");
-            }
-
-            @Override
-            protected void onProgressUpdate(String... text) {
-                Log.e("PaymentTaskRunner onProgressUpdate", "progressUpdate");
-            }
+                // Re-enables the Google Pay payment button.
+                googlePayButton.setClickable(true);
         }
+    }
+
+
+
+
 
 ## Handling the response callback
 
-    public class CheckoutActivity extends AppCompatActivity {
-        ...
-        void finishTask(String resutlVal) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        JSONObject paymentInputObj = paymentInput;
 
-            //Update GUI, show toast, etc..
-            // Toast Example
-            Toast.makeText(
-                    this, getString(R.string.payments_show_name, resutlVal),
-                    Toast.LENGTH_LONG).show();
+        Context context = getApplicationContext();
+        CharSequence response = null;
+        int duration = Toast.LENGTH_SHORT;
+
+        Log.d(TAG, String.valueOf(requestCode));
+        switch (requestCode) {
+            // value passed in AutoResolveHelper
+            case LOAD_PAYMENT_DATA_REQUEST_CODE:
+                switch (resultCode) {
+                    ...
+                    ...
+                }
+                break;
+
+            case LOAD_TRANSACTION_DATA_REQUEST_CODE:
+                switch (resultCode) {
+
+                    case AppCompatActivity.RESULT_OK:
+                        Log.d(TAG, "RESULT_OK");
+                        Log.d(TAG, String.valueOf(requestCode));
+                        
+                        // Response Success CallBack
+                        response = data.getStringExtra("response");
+                        Toast toast = Toast.makeText(context, response, duration);
+                        toast.show();
+                        break;
+
+                    case AppCompatActivity.RESULT_CANCELED:
+                        // The user cancelled the payment attempt
+                        Log.d(TAG, "RESULT_CANCELED");
+                        
+                        // Response Error CallBack
+                        response = data.getStringExtra("response");
+                        Toast toast2 = Toast.makeText(context, response, duration);
+                        toast2.show();
+                        break;
+
+                    case AutoResolveHelper.RESULT_ERROR:
+                        Status status = AutoResolveHelper.getStatusFromIntent(data);
+                        handleError(status);
+                        break;
+
+                }
+
+                // Re-enables the Google Pay payment button.
+                googlePayButton.setClickable(true);
         }
-        ...
-
-        private class PaymentTaskRunner extends AsyncTask<String, String, String> {
-            ...
-        @Override
-            protected void onPostExecute(String result) {
-                Log.i("PaymentTaskRunner onPostExecute", "Done");
-                finishTask(result);
-            }
-            ...
-        }
-
     }
+
 
 ## Payment results
 
