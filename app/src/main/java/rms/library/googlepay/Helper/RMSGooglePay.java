@@ -111,4 +111,15 @@ public class RMSGooglePay {
             throw new RuntimeException("The selected garment cannot be parsed from the list of elements");
         }
     }
+
+    public Object queryPaymentResult(String transactionInput) {
+        JSONObject transactionInputObj = null;
+        try {
+            transactionInputObj = new JSONObject(transactionInput);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        ApiRequestService pay = new ApiRequestService();
+        return pay.GetPaymentResult(transactionInputObj);
+    }
 }

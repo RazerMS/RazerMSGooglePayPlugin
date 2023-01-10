@@ -117,6 +117,66 @@ public class ApiRequestService {
         return null;
     }
 
+    public Object GetPaymentResult(JSONObject transaction ) {
+        Log.d(TAG, "GetPaymentRequest invoked");
+        try {
+            String endPoint = "";
+            String isSandbox = "false";
+
+            if (isSandbox.equals("false")) {
+                endPoint = Production.API_PAYMENT + "RMS/query/q_by_tids.php";
+            } else if (isSandbox.equals("true")) {
+                endPoint = Development.API_PAYMENT + "RMS/query/q_by_tids.php";
+            }
+
+            Uri uri = Uri.parse(endPoint)
+                    .buildUpon()
+                    .build();
+
+            String txID = transaction.getString("txID");
+            String amount = transaction.getString("amount");
+            String merchantId = transaction.getString("merchantId");
+            String verificationKey = transaction.getString("verificationKey");
+
+            String sKey = ApplicationHelper.getInstance().GetSKey(
+                    txID,
+                    merchantId,
+                    verificationKey,
+                    amount
+            );
+
+//            String sKey = ApplicationHelper.getInstance().GetSKey(
+//                    AppData.getInstance().getTxnID(),
+//                    mMobileSDKParam.getMerchantId(),
+//                    mMobileSDKParam.getVerificationKey(),
+//                    mMobileSDKParam.getAmount()
+//            );
+
+//            Uri.Builder builder = new Uri.Builder()
+//                    .appendQueryParameter("amount", amount)
+//                    .appendQueryParameter("txID", txID)
+//                    .appendQueryParameter("domain", merchantId)
+//                    .appendQueryParameter("skey", sKey)
+//                    .appendQueryParameter("url", "")
+//                    .appendQueryParameter("type", "0");
+
+
+
+            Uri.Builder builder = new Uri.Builder()
+                    .appendQueryParameter("tIDs", txID)
+                    .appendQueryParameter("domain", merchantId)
+                    .appendQueryParameter("skey", sKey)
+                    .appendQueryParameter("url", "")
+                    .appendQueryParameter("type", "0");
+
+            return postRequest(uri, builder);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
     private JSONObject postRequest(final Uri uri, final Uri.Builder params) throws JSONException {
         HttpURLConnection httpConnection = null;
         try {
@@ -160,10 +220,10 @@ public class ApiRequestService {
         String output;
 
         try {
-            Log.d(TAG, String.format("code: %s - %s", httpURLConnection.getResponseCode(), httpURLConnection.getResponseMessage()));
             response.put("statusCode", httpURLConnection.getResponseCode());
             response.put("responseMessage", httpURLConnection.getResponseMessage());
             response.put("responseBody", getResponseBody(httpURLConnection));
+            Log.d(TAG, String.format("code: %s - %s body - %s", response.getString("statusCode"),response.getString("responseMessage"), response.getString("responseBody")));
             return response;
         } catch (Exception e) {
             e.printStackTrace();
