@@ -139,10 +139,9 @@ public class ApiRequestService {
             String verificationKey = transaction.getString("verificationKey");
 
             String sKey = ApplicationHelper.getInstance().GetSKey(
-                    txID,
                     merchantId,
-                    verificationKey,
-                    amount
+                    txID,
+                    verificationKey
             );
 
 //            String sKey = ApplicationHelper.getInstance().GetSKey(

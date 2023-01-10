@@ -72,9 +72,9 @@ public class ApplicationHelper {
         return String.format("%s", UtilityHelper.ByteArrayToHexString(hashData));
     }
 
-    public String GetSKey(String txnID, String merchantID, String verifyKey, String amount) {
-        byte[] hashData = AlgorithmHelper.md5(txnID + merchantID + verifyKey + amount);
-        Log.d(TAG, String.format("data: %s%s%s%s", txnID, merchantID, verifyKey, amount));
+    public String GetSKey(String txnID, String merchantID, String verifyKey) {
+        byte[] hashData = AlgorithmHelper.md5(merchantID + txnID + verifyKey);
+        Log.d(TAG, String.format("data: %s%s%s%s", txnID, merchantID, verifyKey));
         Log.d(TAG, String.format("hashData: %s", UtilityHelper.ByteArrayToHexString(hashData)));
 
         return String.format("%s", UtilityHelper.ByteArrayToHexString(hashData));
