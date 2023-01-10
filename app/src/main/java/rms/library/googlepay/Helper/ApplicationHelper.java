@@ -74,7 +74,7 @@ public class ApplicationHelper {
 
     public String GetSKey(String txnID, String merchantID, String verifyKey) {
         byte[] hashData = AlgorithmHelper.md5(merchantID + txnID + verifyKey);
-        Log.d(TAG, String.format("data: %s%s%s%s", txnID, merchantID, verifyKey));
+        Log.d(TAG, String.format("data: %s%s%s", merchantID, txnID, verifyKey));
         Log.d(TAG, String.format("hashData: %s", UtilityHelper.ByteArrayToHexString(hashData)));
 
         return String.format("%s", UtilityHelper.ByteArrayToHexString(hashData));
