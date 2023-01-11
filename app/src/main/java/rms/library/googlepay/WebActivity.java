@@ -115,10 +115,15 @@ public class WebActivity extends AppCompatActivity {
 
                         // If StatCode
                         if (responseBodyObj.has("StatCode")){
-                            Intent intent = new Intent();
-                            intent.putExtra("response", String.valueOf(queryResultStr[0]));
-                            setResult(RESULT_OK, intent);
-                            finish();
+                            String statCodeValue = responseBodyObj.getString("StatCode");
+                            if (statCodeValue != "22" ) {
+                                //If not pending
+                                Intent intent = new Intent();
+//                                intent.putExtra("response", String.valueOf(queryResultStr[0]));
+                                intent.putExtra("response", String.valueOf(responseBodyObj));
+                                setResult(RESULT_OK, intent);
+                                finish();
+                            }
                         }
 
                     } catch (JSONException e) {
