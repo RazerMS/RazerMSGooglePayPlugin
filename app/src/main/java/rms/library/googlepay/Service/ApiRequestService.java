@@ -123,10 +123,16 @@ public class ApiRequestService {
             String endPoint = "";
             String isSandbox = "false";
 
+//            if (isSandbox.equals("false")) {
+//                endPoint = Production.API_PAYMENT + "RMS/query/q_by_tids.php";
+//            } else if (isSandbox.equals("true")) {
+//                endPoint = Development.API_PAYMENT + "RMS/query/q_by_tids.php";
+//            }
+
             if (isSandbox.equals("false")) {
-                endPoint = Production.API_PAYMENT + "RMS/query/q_by_tids.php";
+                endPoint = Production.API_PAYMENT + "RMS/q_by_tid.php";
             } else if (isSandbox.equals("true")) {
-                endPoint = Development.API_PAYMENT + "RMS/query/q_by_tids.php";
+                endPoint = Development.API_PAYMENT + "RMS/q_by_tid.php";
             }
 
             Uri uri = Uri.parse(endPoint)
@@ -139,9 +145,10 @@ public class ApiRequestService {
             String verificationKey = transaction.getString("verificationKey");
 
             String sKey = ApplicationHelper.getInstance().GetSKey(
-                    merchantId,
                     txID,
-                    verificationKey
+                    merchantId,
+                    verificationKey,
+                    amount
             );
 
 //            String sKey = ApplicationHelper.getInstance().GetSKey(
@@ -151,22 +158,22 @@ public class ApiRequestService {
 //                    mMobileSDKParam.getAmount()
 //            );
 
-//            Uri.Builder builder = new Uri.Builder()
-//                    .appendQueryParameter("amount", amount)
-//                    .appendQueryParameter("txID", txID)
-//                    .appendQueryParameter("domain", merchantId)
-//                    .appendQueryParameter("skey", sKey)
-//                    .appendQueryParameter("url", "")
-//                    .appendQueryParameter("type", "0");
-
-
-
             Uri.Builder builder = new Uri.Builder()
-                    .appendQueryParameter("tIDs", txID)
+                    .appendQueryParameter("amount", amount)
+                    .appendQueryParameter("txID", txID)
                     .appendQueryParameter("domain", merchantId)
                     .appendQueryParameter("skey", sKey)
                     .appendQueryParameter("url", "")
                     .appendQueryParameter("type", "0");
+
+
+
+//            Uri.Builder builder = new Uri.Builder()
+//                    .appendQueryParameter("tIDs", txID)
+//                    .appendQueryParameter("domain", merchantId)
+//                    .appendQueryParameter("skey", sKey)
+//                    .appendQueryParameter("url", "")
+//                    .appendQueryParameter("type", "0");
 
             return postRequest(uri, builder);
         } catch (JSONException e) {
