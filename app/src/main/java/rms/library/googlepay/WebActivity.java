@@ -116,7 +116,7 @@ public class WebActivity extends AppCompatActivity {
                         // If StatCode
                         if (responseBodyObj.has("StatCode")){
                             String statCodeValue = responseBodyObj.getString("StatCode");
-                            if (statCodeValue != "22" ) {
+                            if (!statCodeValue.equals("22")) {
                                 //If not pending
                                 Intent intent = new Intent();
 //                                intent.putExtra("response", String.valueOf(queryResultStr[0]));
@@ -242,7 +242,7 @@ public class WebActivity extends AppCompatActivity {
                         }
                     });
                 } else {
-                    Log.d(TAG, "pInstruction found : ");
+                    Log.d(TAG, "TxnData not found ! ");
                     Intent intent = new Intent();
                     String strResponse = response.toString();
                     intent.putExtra("response", strResponse);
@@ -250,7 +250,7 @@ public class WebActivity extends AppCompatActivity {
                     finish();
                 }
             } else {
-                Log.d(TAG, "TxID not found ! : ");
+                Log.d(TAG, "TxID not found !  ");
                 Intent intent = new Intent();
                 String strResponse = response.toString();
                 intent.putExtra("response", strResponse);
