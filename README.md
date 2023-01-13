@@ -123,13 +123,15 @@ In file Constants.java
         paymentInput.put("isSandbox", "false");
 
     
-## Start Razer GooglePay payment module using AsyncTask
+## Make Request Payment RMS GooglePay
 
         
         public class CheckoutActivity extends AppCompatActivity {
 
-        // Arbitrarily-picked constant integer you define to track a request for payment data activity.
+         // Arbitrarily-picked constant integer you define to track a request for payment data activity.
+        private static final int LOAD_PAYMENT_DATA_REQUEST_CODE = 991;
         private static final int LOAD_TRANSACTION_DATA_REQUEST_CODE = 998;
+        private static int COUNT = 0;
         ...
         ...
         public JSONObject paymentInput = new JSONObject();
