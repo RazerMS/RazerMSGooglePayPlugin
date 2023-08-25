@@ -34,7 +34,7 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation "androidx.lifecycle:lifecycle-viewmodel:2.5.1"
     implementation "com.google.android.gms:play-services-pay:16.1.0"
-    implementation "com.google.android.gms:play-services-wallet:19.2.0-beta01"
+    implementation "com.google.android.gms:play-services-wallet:19.2.0"
     implementation 'org.apache.commons:commons-lang3:3.4'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'

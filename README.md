@@ -1,7 +1,7 @@
 <!--
- # license: Copyright © 2011-2022 Razer Merchant Services Sdn Bhd. All Rights Reserved. 
+ # license: Copyright © 2011-2023 Razer Merchant Services Sdn Bhd. All Rights Reserved. 
  -->
- 
+
 ![banner RMSxGooglePay](https://user-images.githubusercontent.com/17770615/199203191-891462c9-05b3-4ad5-b2a9-eaa67d873698.png)
 
 
@@ -11,9 +11,9 @@ This is the complete and functional Razer Merchant Services Google Pay Plugin pa
 
 ## Recommended configurations
 
-    - Android Studio version: Chipmunk | 2021.2.1 Patch 1
+    - Android Studio Flamingo | 2022.2.1 Patch 2
 
-    - Minimum target version: Android 8.0 - API Level 26
+    - Minimum target version: Android 5.0 - API Level 21
 
 ## Installation Guidance
 
@@ -53,7 +53,7 @@ Maven primarily aids in the download of dependencies, which are libraries or JAR
 
             defaultConfig {
                 ...
-                minSdk 26
+                minSdk 21
                 ...
             }
             ...
@@ -62,197 +62,34 @@ Maven primarily aids in the download of dependencies, which are libraries or JAR
         dependencies {
             ...
             implementation 'com.github.RazerMS:RazerMSGooglePayPlugin:1.0.3'
-            implementation 'com.google.android.gms:play-services-wallet:19.1.0'
+
+            implementation "com.google.android.gms:play-services-pay:16.1.0"
+            implementation "com.google.android.gms:play-services-wallet:19.2.0-beta01"
+            implementation 'androidx.appcompat:appcompat:1.5.1'
+            implementation 'com.google.android.material:material:1.6.1'
+            implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+            implementation "androidx.lifecycle:lifecycle-viewmodel:2.5.1"
+            implementation 'org.apache.commons:commons-lang3:3.4'
+            implementation 'com.google.zxing:core:3.5.0'
             ...
 
         }
 
-## Prepare the Payment detail object
+## Quick Guide
 
-        JSONObject paymentInputObj = new JSONObject();
+    Demo App Link : https://github.com/RazerMS/RazerMSGooglePayPlugin/tree/demo-app
 
-        // Mandatory String. Payment values.
-        paymentInputObj.put("orderId", "order111");
-        paymentInputObj.put("amount", "1.10");
-        paymentInputObj.put("currency", "MYR");
+    Refer to the Demo App for easy integration guidance.
 
-        // Optional, but required payment values. User input will be required when values not passed.
-        paymentInputObj.put("billName", "Masso Dasuki");
-        paymentInputObj.put("billEmail", "masso@gmail.com");
-        paymentInputObj.put("billPhone", "601234567890");
-        paymentInputObj.put("billDesc", "Google Pay Testing");
+    All these 5 classes are compulsory to be created in your app :
+    1) CheckoutActivity
+    2) CheckoutSuccessActivity
+    3) PaymentsUtil
+    4) CheckoutViewModel
+    5) Constants
 
-
-        // Mandatory String, Merchant Config
-        paymentInputObj.put("merchantId", "merchant_Dev");
-        paymentInputObj.put("verificationKey", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-        paymentInputObj.put("isSandbox", "false");
-
-    
-## Start Razer GooglePay payment module using AsyncTask
-
-        private void handlePaymentSuccess(@Nullable PaymentData paymentData) {
-            final String paymentInfo = paymentData.toJson();
-
-            try {
-
-                JSONObject paymentInputObj = new JSONObject();
-
-                paymentInputObj.put("orderId", "order111");
-                paymentInputObj.put("amount", "1.10");
-                paymentInputObj.put("currency", "MYR");
-                paymentInputObj.put("billName", "Masso Dasuki");
-                paymentInputObj.put("billEmail", "masso@gmail.com");
-                paymentInputObj.put("billPhone", "601234567890");
-                paymentInputObj.put("billDesc", "Google Pay Testing");
-                paymentInputObj.put("merchantId", "merchant_Dev");
-                paymentInputObj.put("verificationKey", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-                paymentInputObj.put("isSandbox", "false");
-
-                String paymentInput = paymentInputObj.toString();
-
-                // Execute the payment using PaymentTaskRunner (AsyncTask Process)
-                PaymentTaskRunner runner = new PaymentTaskRunner();
-                runner.execute(paymentInput, paymentInfo);
-
-            } catch (JSONException e) {
-                throw new RuntimeException("The selected garment cannot be parsed from the list of elements");
-            }
-        }
-
-
-## Create PaymentTaskRunner extend by AsyncTask
-
-        private class PaymentTaskRunner extends AsyncTask<String, String, String> {
-
-            private String resp;
-            @Override
-            protected String doInBackground(String... params) {
-                try {
-                    RMSGooglePay pay = new RMSGooglePay();
-                    Object result = pay.requestPayment(
-                            params[0],
-                            params[1]
-                    );
-
-                    resp = result.toString();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    resp = e.getMessage();
-                }
-                return resp;
-            }
-
-            @Override
-            protected void onPostExecute(String result) {
-                Log.i("PaymentTaskRunner onPostExecute", "Done");
-                processValue(result);
-            }
-
-            @Override
-            protected void onPreExecute() {
-                Log.i("PaymentTaskRunner onPreExecute", "preExecute");
-            }
-
-            @Override
-            protected void onProgressUpdate(String... text) {
-                Log.e("PaymentTaskRunner onProgressUpdate", "progressUpdate");
-            }
-        }
-
-
-## Full Code
-
-        private void handlePaymentSuccess(@Nullable PaymentData paymentData) {
-            final String paymentInfo = paymentData.toJson();
-
-            try {
-
-                JSONObject paymentInputObj = new JSONObject();
-
-                paymentInputObj.put("orderId", "order111");
-                paymentInputObj.put("amount", "1.10");
-                paymentInputObj.put("currency", "MYR");
-                paymentInputObj.put("billName", "Masso Dasuki");
-                paymentInputObj.put("billEmail", "masso@gmail.com");
-                paymentInputObj.put("billPhone", "01234567890");
-                paymentInputObj.put("billDesc", "Google Pay Testing");
-                paymentInputObj.put("merchantId", "merchant_Dev");
-                paymentInputObj.put("verificationKey", "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-                paymentInputObj.put("isSandbox", "false");
-
-                String paymentInput = paymentInputObj.toString();
-
-                PaymentTaskRunner runner = new PaymentTaskRunner();
-                runner.execute(paymentInput, paymentInfo);
-
-            } catch (JSONException e) {
-                throw new RuntimeException("The selected garment cannot be parsed from the list of elements");
-            }
-        }
-
-        private class PaymentTaskRunner extends AsyncTask<String, String, String> {
-
-            private String resp;
-            @Override
-            protected String doInBackground(String... params) {
-                try {
-                    RMSGooglePay pay = new RMSGooglePay();
-                    Object result = pay.requestPayment(
-                            params[0],
-                            params[1]
-                    );
-
-                    resp = result.toString();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    resp = e.getMessage();
-                }
-                return resp;
-            }
-
-            @Override
-            protected void onPostExecute(String result) {
-                Log.i("PaymentTaskRunner onPostExecute", "Done");
-                processValue(result);
-            }
-
-            @Override
-            protected void onPreExecute() {
-                Log.i("PaymentTaskRunner onPreExecute", "preExecute");
-            }
-
-            @Override
-            protected void onProgressUpdate(String... text) {
-                Log.e("PaymentTaskRunner onProgressUpdate", "progressUpdate");
-            }
-        }
-
-## Handling the response callback
-
-    public class CheckoutActivity extends AppCompatActivity {
-        ...
-        void finishTask(String resutlVal) {
-
-            //Update GUI, show toast, etc..
-            // Toast Example
-            Toast.makeText(
-                    this, getString(R.string.payments_show_name, resutlVal),
-                    Toast.LENGTH_LONG).show();
-        }
-        ...
-
-        private class PaymentTaskRunner extends AsyncTask<String, String, String> {
-            ...
-        @Override
-            protected void onPostExecute(String result) {
-                Log.i("PaymentTaskRunner onPostExecute", "Done");
-                finishTask(result);
-            }
-            ...
-        }
-
-    }
+    Create your own classes based on your app preferences.
+    Refer Demo App res folder for necessary resources guidance.
 
 ## Payment results
 
@@ -277,7 +114,7 @@ Maven primarily aids in the download of dependencies, which are libraries or JAR
     Parameter and meaning:
     
     "status_code" - "00" for Success, "11" for Failed, "22" for *Pending. 
-    (*Pending status only applicable to cash channels only)
+    
     "amount" - The transaction amount
     "paydate" - The transaction date
     "order_id" - The transaction order id
@@ -292,14 +129,14 @@ Maven primarily aids in the download of dependencies, which are libraries or JAR
     
     {
         "error_code" = A01;
-        "error_desc" = "Fail to detokenize Apple Pay Token given";
+        "error_desc" = "Fail to detokenize Google Pay Token given";
         status = 0;
     }
     
     Parameter and meaning:
     
-    "Fail to detokenize Apple Pay Token given" - Error starting a payment process due to several possible reasons, please contact Razer Merchant Services support should the error persists.
-    1) Misconfigure ApplePay setup
+    "Fail to detokenize Google Pay Token given" - Error starting a payment process due to several possible reasons, please contact Razer Merchant Services support should the error persists.
+    1) Misconfigure GooglePay setup
     2) API credentials (username, password, merchant id, verify key)
     3) Razer Merchant Services server offline.
 
