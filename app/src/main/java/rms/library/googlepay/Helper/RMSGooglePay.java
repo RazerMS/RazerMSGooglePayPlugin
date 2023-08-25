@@ -1,3 +1,7 @@
+/*
+ * Copyright 2023 Razer Merchant Services.
+ */
+
 package rms.library.googlepay.Helper;
 
 import android.os.Build;
@@ -43,6 +47,7 @@ public class RMSGooglePay {
             String isSandbox = paymentInputObj.getString("isSandbox");
 
             JSONObject error = new JSONObject();
+
             if (!ORDERID.matcher(orderId).matches()) {
                 //throw new IllegalArgumentException("Invalid String");
                 error.put("error", "400");
@@ -113,13 +118,17 @@ public class RMSGooglePay {
     }
 
     public Object queryPaymentResult(String transactionInput) {
+
         JSONObject transactionInputObj = null;
+
         try {
             transactionInputObj = new JSONObject(transactionInput);
         } catch (JSONException e) {
             e.printStackTrace();
         }
+
         ApiRequestService pay = new ApiRequestService();
+
         return pay.GetPaymentResult(transactionInputObj);
     }
 }

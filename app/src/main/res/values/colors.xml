@@ -7,4 +7,10 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="primary">#333</color>
+    <color name="primaryDark">#111</color>
+    <color name="accent">#999</color>
+    <color name="accent_alpha26">#42CCCCCC</color>
+    <color name="razer_green">#00ff00</color>
 </resources>
