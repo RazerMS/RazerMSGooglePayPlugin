@@ -11,6 +11,7 @@ This is the complete and functional Razer Merchant Services Google Pay Plugin pa
 
 ## Recommended configurations
 
+[//]: # (TEST)
     - Android Studio version: Chipmunk | 2021.2.1 Patch 1
 
     - Minimum target version: Android 8.0 - API Level 26
