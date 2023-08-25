@@ -1,54 +1,75 @@
+/*
+ * Copyright 2023 Razer Merchant Services.
+ */
+
 package rms.library.googlepay;
 
-import static android.content.ContentValues.TAG;
-
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Color;
-import android.os.AsyncTask;
+import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
+import android.webkit.SslErrorHandler;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.ProgressBar;
 
-import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatTextView;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Iterator;
+
 import rms.library.googlepay.Helper.RMSGooglePay;
 import rms.library.googlepay.model.Transaction;
 
 public class WebActivity extends AppCompatActivity {
 
     private WebView wvGateway;
+    private ProgressBar pbLoading;
+    private AppCompatTextView tvLoading;
     public Transaction transaction = new Transaction();
+
+    public static boolean statCodeValueSuccess = false;
+
+    public static String isSandbox;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Log.e("logGooglePay" , "WebActivity");
+
         setContentView(R.layout.activity_web);
 
         Intent intent = getIntent();
         String paymentInput = intent.getStringExtra("paymentInput");
         String paymentInfo = intent.getStringExtra("paymentInfo");
-        Log.d(TAG, String.format("paymentInput: %s - paymentInfo - %s", paymentInput, paymentInfo));
 
         // Transcation model from paymentInput
         JSONObject paymentInputObj = null;
         try {
             paymentInputObj = new JSONObject(paymentInput);
             transaction.setVkey(paymentInputObj.getString("verificationKey"));
+            isSandbox = paymentInputObj.getString("isSandbox");
+            Log.e("logGooglePay" , "WebActivity isSandbox = " + isSandbox);
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
-
+        tvLoading = findViewById(R.id.tvLoading);
+        pbLoading = findViewById(R.id.pbLoading);
         wvGateway = findViewById(R.id.webView);
         wvGateway.setBackgroundColor(Color.WHITE);
         wvGateway.getSettings().setDomStorageEnabled(true);
@@ -57,11 +78,11 @@ public class WebActivity extends AppCompatActivity {
         wvGateway.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
         wvGateway.getSettings().setSupportMultipleWindows(true);
 
-
         PaymentThread paymentThread = new PaymentThread();
         paymentThread.setValue(paymentInput, paymentInfo); // set value
         Thread thread = new Thread(paymentThread);
         thread.start();
+
         try {
             thread.join();
             JSONObject paymentResult = new JSONObject(new JSONObject(paymentThread.getValue()).getString("responseBody"));
@@ -70,15 +91,13 @@ public class WebActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-//        PaymentTaskRunner runner = new PaymentTaskRunner();
-//        runner.execute(paymentInput, paymentInfo);
     }
 
     private void onStartTimOut() {
+
         long minTimeOut = 180000; // 3 minutes
         long interval = 6000;
         final String[] queryResultStr = {null};
-        Log.d(TAG, String.format("onStartTimOut"));
         final String[] trasactionJsonStr = {null};
 
         // Query Transaction ID for every 6 second in 3 minutes
@@ -87,7 +106,6 @@ public class WebActivity extends AppCompatActivity {
             // Query Transaction ID for every 6 second in 3 minutes
             @Override
             public void onTick(long millisUntilFinished) {
-                Log.d(TAG, String.format("onTick: %d", millisUntilFinished / interval));
 
                 JSONObject transactionObject = new JSONObject();
                 try {
@@ -102,8 +120,10 @@ public class WebActivity extends AppCompatActivity {
 
                 QueryResultThread queryResultThread = new QueryResultThread();
                 queryResultThread.setValue(trasactionJsonStr[0]); // set value
+
                 Thread thread = new Thread(queryResultThread);
                 thread.start();
+
                 try {
                     thread.join();
                     queryResultStr[0] = queryResultThread.getValue();
@@ -116,21 +136,51 @@ public class WebActivity extends AppCompatActivity {
                         // If StatCode
                         if (responseBodyObj.has("StatCode")){
                             String statCodeValue = responseBodyObj.getString("StatCode");
-                            if (!statCodeValue.equals("22")) {
-                                //If not pending
-                                Intent intent = new Intent();
-//                                intent.putExtra("response", String.valueOf(queryResultStr[0]));
-                                intent.putExtra("response", String.valueOf(responseBodyObj));
-                                setResult(RESULT_OK, intent);
-                                finish();
+
+                            Intent intent = new Intent();
+                            intent.putExtra("response", String.valueOf(responseBodyObj));
+
+                            Log.e("logGooglePay" , "statCodeValue " + statCodeValue);
+
+                            if (statCodeValue.equals("00")) {
+                                if (statCodeValueSuccess) {
+                                    setResult(RESULT_OK, intent);
+                                    finish();
+                                }
+                            } else if (statCodeValue.equals("11")) {
+                                cancel();
+                                pbLoading.setVisibility(View.GONE);
+                                tvLoading.setVisibility(View.GONE);
+
+                                String errorCode = null;
+                                try {
+                                    errorCode = responseBodyObj.getString("ErrorCode");
+                                } catch (JSONException e) {
+                                    throw new RuntimeException(e);
+                                }
+                                String errorDesc = null;
+                                try {
+                                    errorDesc = responseBodyObj.getString("ErrorDesc");
+                                } catch (JSONException e) {
+                                    throw new RuntimeException(e);
+                                }
+
+                                new AlertDialog.Builder(WebActivity.this)
+                                        .setTitle("Payment Failed")
+                                        .setMessage(errorCode + " : " + errorDesc)
+                                        .setCancelable(false)
+                                        .setPositiveButton("CLOSE", (dialog, which) -> {
+                                            setResult(RESULT_CANCELED, intent);
+                                            finish();
+                                        }).show();
+                            }  else if (statCodeValue.equals("22")) {
+                                // Do Nothing - It will auto handle
                             }
                         }
 
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-
-                    Log.d(TAG, String.format("onTick QueryResultThread thread.join()"));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -138,19 +188,22 @@ public class WebActivity extends AppCompatActivity {
 
             @Override
             public void onFinish() {
-                Log.d(TAG, "onFinish");
                 try {
                     JSONObject queryResultObj = new JSONObject(queryResultStr[0]);
                     String responseBody = queryResultObj.getString("responseBody");
+
                     JSONObject responseBodyObj = new JSONObject(responseBody);
+
                     Intent intent = new Intent();
                     intent.putExtra("response", String.valueOf(queryResultStr[0]));
-                    // If Fail
+
+                    // If timeout / cancel
                     if (!responseBodyObj.has("StatCode")){
                         setResult(RESULT_CANCELED, intent);
                     } else {
                         setResult(RESULT_OK, intent);
                     }
+
                     finish();
 
                 } catch (JSONException e) {
@@ -161,20 +214,59 @@ public class WebActivity extends AppCompatActivity {
         countDownTimer.start();
     }
 
+    private String xdkHTMLRedirection = "";
     private void onLoadHtmlWebView(String plainHtml) {
-        String encodedHtml = Base64.encodeToString(plainHtml.getBytes(), Base64.NO_PADDING);
-        Log.d(TAG, String.format("onLoadHtmlWebView: %s", encodedHtml));
 
-        wvGateway.setVisibility(View.VISIBLE);
-        wvGateway.loadData(encodedHtml, "text/html", "base64");
+//        wvGateway.setVisibility(View.VISIBLE);
+        pbLoading.setVisibility(View.VISIBLE);
+        tvLoading.setVisibility(View.VISIBLE);
+        statCodeValueSuccess = false;
+
+        if (plainHtml.contains("xdkHTMLRedirection")) {
+            xdkHTMLRedirection = StringUtils.substringBetween(plainHtml, "xdkHTMLRedirection' value='", "'");
+            wvGateway.loadData(xdkHTMLRedirection, "text/html", "base64");
+        } else {
+            String encodedHtml = Base64.encodeToString(plainHtml.getBytes(), Base64.NO_PADDING);
+            wvGateway.loadData(encodedHtml, "text/html", "base64");
+        }
+
+        wvGateway.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+
+                if (request.getUrl().toString().contains("result.php")) {
+                    statCodeValueSuccess = true;
+                }
+
+                return super.shouldOverrideUrlLoading(view, request);
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+            }
+
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                super.onReceivedError(view, request, error);
+            }
+
+            @Override
+            public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
+                super.onReceivedHttpError(view, request, errorResponse);
+            }
+
+            @Override
+            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+                super.onReceivedSslError(view, handler, error);
+            }
+        });
     }
 
     public void onRequestData(JSONObject response) {
-        Log.d(TAG, "onGetPaymentRequestForm onComplete invoked");
 
         try {
             if (response.has("error_code") && response.has("error_desc")) {
-//                mMobileSDKResult.onResult(String.format("{ code:%s, message:%s }", response.getString("error_code"), response.getString("error_desc")));
                 Intent intent = new Intent();
                 String strResponse = response.toString();
                 intent.putExtra("response", strResponse);
@@ -182,7 +274,6 @@ public class WebActivity extends AppCompatActivity {
                 finish();
             }
             if (response.has("TxnID")) {
-//                AppData.getInstance().setTxnID(response.getString("TxnID"));
                 try {
                     transaction.setTxID(response.getString("TxnID"));
                     transaction.setDomain(response.getString("MerchantID"));
@@ -192,15 +283,11 @@ public class WebActivity extends AppCompatActivity {
                 }
 
                 if (response.has("TxnData") && !response.has("pInstruction")) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            onStartTimOut();
-                        }
-                    });
+
+                    onStartTimOut();
 
                     JSONObject txnData = response.getJSONObject("TxnData");
-                    Log.d(TAG, "TxnData: " + txnData);
+
                     StringBuilder html = new StringBuilder();
                     html.append(String.format("<form id='prForm' action='%s' method='%s'>\n",
                             txnData.getString("RequestURL"),
@@ -213,14 +300,13 @@ public class WebActivity extends AppCompatActivity {
 
                         if (txnData.get("RequestData") instanceof JSONObject) {
                             JSONObject requestData = txnData.getJSONObject("RequestData");
-                            Log.d(TAG, "RequestData: " + requestData);
 
                             Iterator<String> keys = requestData.keys();
                             while (keys.hasNext()) {
                                 String key = keys.next();
-                                Log.d(TAG, "Key: " + key);
+
                                 if (requestData.get(key) instanceof JSONObject) {
-                                    Log.d(TAG, "param : " + requestData.get(key));
+                                    // Do nothing
                                 } else {
                                     if (requestData.has("checkoutUrl")) {
 //                                        AppData.getInstance().setRedirectAppUrl(requestData.getString("checkoutUrl"));
@@ -233,16 +319,9 @@ public class WebActivity extends AppCompatActivity {
 
                     html.append("</form>");
                     html.append("<script> document.getElementById('prForm').submit();</script>");
-                    Log.d(TAG, "HTML: " + html);
 
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            onLoadHtmlWebView(html.toString());
-                        }
-                    });
+                    onLoadHtmlWebView(html.toString());
                 } else {
-                    Log.d(TAG, "TxnData not found ! ");
                     Intent intent = new Intent();
                     String strResponse = response.toString();
                     intent.putExtra("response", strResponse);
@@ -250,7 +329,6 @@ public class WebActivity extends AppCompatActivity {
                     finish();
                 }
             } else {
-                Log.d(TAG, "TxID not found !  ");
                 Intent intent = new Intent();
                 String strResponse = response.toString();
                 intent.putExtra("response", strResponse);
@@ -262,13 +340,7 @@ public class WebActivity extends AppCompatActivity {
         }
     }
 
-    void processValue(String result) throws JSONException {
-        //Update GUI, show toast, etc..
-        JSONObject responseBodyObj = new JSONObject(new JSONObject(result).getString("responseBody"));
-        onRequestData(responseBodyObj);
-    }
-
-    public static class PaymentThread implements Runnable {
+    public class PaymentThread implements Runnable {
         private volatile String resp;
         private String paymentInput;
         private String  paymentInfo;
@@ -284,18 +356,20 @@ public class WebActivity extends AppCompatActivity {
 
         @Override
         public void run() {
-            RMSGooglePay pay = new RMSGooglePay();
-            JSONObject result = null;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                result = (JSONObject) pay.requestPayment(paymentInput, paymentInfo);
-            }
-            resp = result.toString();
-            Log.d(TAG, String.format("PaymentThread response: %s", resp));
+
+                RMSGooglePay pay = new RMSGooglePay();
+                JSONObject result = null;
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    result = (JSONObject) pay.requestPayment(paymentInput, paymentInfo);
+                }
+
+                resp = result.toString();
+
         }
     }
 
-
-    public static class QueryResultThread implements Runnable {
+    public class QueryResultThread implements Runnable {
         private volatile String resp;
         private String transaction;
 
@@ -309,88 +383,12 @@ public class WebActivity extends AppCompatActivity {
 
         @Override
         public void run() {
-            RMSGooglePay pay = new RMSGooglePay();
-            JSONObject result = (JSONObject) pay.queryPaymentResult(transaction);
-            resp = result.toString();
-        }
-    }
 
-
-    //DEPRECATED
-    @SuppressLint("StaticFieldLeak")
-    private class PaymentTaskRunner extends AsyncTask<String, String, String> {
-
-        private String resp;
-        @RequiresApi(api = Build.VERSION_CODES.O)
-        @Override
-        protected String doInBackground(String... params) {
-            try {
                 RMSGooglePay pay = new RMSGooglePay();
-                JSONObject result = (JSONObject) pay.requestPayment(
-                        params[0],
-                        params[1]
-                );
+                JSONObject result = (JSONObject) pay.queryPaymentResult(transaction);
                 resp = result.toString();
-            } catch (Exception e) {
-                e.printStackTrace();
-                resp = e.getMessage();
-            }
-            Log.i("PaymentTaskRunner doInBackground", resp);
-            return resp;
-        }
-        @Override
-        protected void onPostExecute(String result) {
-            Log.i("PaymentTaskRunner onPostExecute", result);
-            try {
-                processValue(result);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-        @Override
-        protected void onPreExecute() {
-            Log.i("PaymentTaskRunner onPreExecute", "preExecute");
-        }
-        @Override
-        protected void onProgressUpdate(String... text) {
-            Log.e("PaymentTaskRunner onProgressUpdate", "progressUpdate");
+
         }
     }
 
-    private class QueryResultTaskRunner extends AsyncTask<String, String, String> {
-        private String resp;
-        @Override
-        protected String doInBackground(String... params) {
-            try {
-                RMSGooglePay pay = new RMSGooglePay();
-                JSONObject result = (JSONObject) pay.queryPaymentResult(
-                        params[0]
-                );
-
-                resp = result.toString();
-            } catch (Exception e) {
-                e.printStackTrace();
-                resp = e.getMessage();
-            }
-            Log.i("PaymentTaskRunner doInBackground", resp);
-            return resp;
-        }
-        @Override
-        protected void onPostExecute(String result) {
-            Log.i("PaymentTaskRunner onPostExecute", result);
-            try {
-                processValue(result);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-        @Override
-        protected void onPreExecute() {
-            Log.i("PaymentTaskRunner onPreExecute", "preExecute");
-        }
-        @Override
-        protected void onProgressUpdate(String... text) {
-            Log.e("PaymentTaskRunner onProgressUpdate", "progressUpdate");
-        }
-    }
 }
