@@ -7,4 +7,4 @@
 
 # [Mobile Plugin] - RazerMS Google Pay Plugin
 
-Latest integration documentation moved here: https://github.com/FiuuPayment/FiuuGooglePayPlugin
+The library plugin have been moved to: https://github.com/FiuuPayment/Mobile-XDK-Fiuu_Android_Library?tab=readme-ov-file#google-pay
